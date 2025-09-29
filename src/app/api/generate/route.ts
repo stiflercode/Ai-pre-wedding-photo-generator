@@ -40,7 +40,7 @@ async function generateOne(
   const model = genAI.getGenerativeModel({ model: modelName });
   const imagePart1 = await fileToInlineData(img1);
   const imagePart2 = await fileToInlineData(img2);
-  const prompt = `${basePrompt}\nMake a single high-quality realistic image of the couple using the provided reference faces and outfits. Ensure romantic composition and photography aesthetics. Variation seed: ${attemptSeed}.`;
+  const prompt = `${basePrompt}\n\nImportant: Use the faces from the two reference images to create the couple in this scene.\n- First image: the woman (Partner 1)\n- Second image: the man (Partner 2)\nMaintain identity: facial structure, skin tone, hairline, eyes, and expressions. Do not invent new people.\nGenerate exactly one high‑quality, realistic image matching the artistic style. Variation seed: ${attemptSeed}.`;
 
   const req: GenerateContentRequest = {
     contents: [
@@ -57,6 +57,7 @@ async function generateOne(
       temperature: 0.9,
       topP: 0.95,
       topK: 32,
+      responseMimeType: "image/png",
     },
   };
   const result = await model.generateContent(req);
@@ -97,7 +98,7 @@ async function generateWithFailover(
         const msg = err instanceof Error ? err.message : String(err);
         // If rate/quota/billing → try next key (break inner)
         if (/quota|billing|exceed|rate|429|402|403/i.test(msg)) {
-          break; // break inner for next key
+          continue; // try next model before switching key
         }
         // If model issue → try next model
         if (/model|not\s*found|unsupported|invalid/i.test(msg)) {
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest) {
     }
 
     const basePrompt = style.prompt;
+    const enhancedPrompt = `Use the faces from the two images provided to create the couple in this scene. The first image shows the woman's face, the second shows the man's face. Maintain their distinct facial features, expressions, and characteristics while adapting them to the artistic style. Scene description: ${basePrompt}`;
 
     // DEMO mode: return placeholder images to allow full UX testing without billing/quota.
     if (DEMO_MODE) {
@@ -170,7 +172,7 @@ export async function POST(req: NextRequest) {
     async function worker() {
       while (queue.length) {
         const seed = queue.shift()!;
-        const imgB64 = await generateWithFailover(basePrompt, img1 as File, img2 as File, seed);
+        const imgB64 = await generateWithFailover(enhancedPrompt, img1 as File, img2 as File, seed);
         results.push(imgB64);
       }
     }
