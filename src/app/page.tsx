@@ -115,14 +115,14 @@ export default function Home() {
           '@type': 'WebSite',
           name: 'AI Pre‑Wedding Photoshoot Generator',
           url: '/',
-          description: 'Upload two photos, pick a style, and generate 10 romantic AI pre‑wedding images.',
+          description: 'Upload two photos, pick a style, and generate 1 romantic AI pre‑wedding image.',
           publisher: { '@type': 'Organization', name: 'AI Pre‑Wedding' }
         })}
       </Script>
       <main className="mx-auto max-w-6xl px-4 py-8 md:py-10">
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">AI Pre-Wedding Photoshoot</h1>
-          <p className="text-sm text-muted-foreground mt-1">Upload two photos, pick a style, and generate 10 romantic images.</p>
+          <p className="text-sm text-muted-foreground mt-1">Upload two photos, pick a style, and generate 1 romantic image.</p>
         </header>
 
         {/* Uploads */}
