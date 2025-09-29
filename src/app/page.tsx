@@ -139,7 +139,7 @@ export default function Home() {
                       onDrop={(e)=>{ e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) u.set(f); setDragOver(0); }}
                     >
                     <Input data-testid={`file-input-${idx+1}`} type="file" className="hidden" accept={ACCEPT.join(",")} onChange={(e)=>{ const f = (e.target as HTMLInputElement).files?.[0]; if (f) u.set(f); }} />
-                    Drop or click to upload (JPG/PNG/WebP, 5MB)
+                    Drop or click to upload (JPG/PNG/WebP, 5MB). For best results, use clear, forward-facing, well-lit photos showing the full face.
                   </label>
                 ) : (
                   <div className="flex items-center gap-3">
