@@ -152,22 +152,22 @@ export async function POST(req: NextRequest) {
     const basePrompt = style.prompt;
     const enhancedPrompt = `Use the faces from the two images provided to create the couple in this scene. The first image shows the woman's face, the second shows the man's face. Maintain their distinct facial features, expressions, and characteristics while adapting them to the artistic style. Scene description: ${basePrompt}`;
 
-    // DEMO mode: return placeholder images to allow full UX testing without billing/quota.
+    // DEMO mode: return a single placeholder image to allow UX testing without billing/quota.
     if (DEMO_MODE) {
-      const images = Array.from({ length: 10 }, (_, i) => {
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='1000'>\n  <defs>\n    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>\n      <stop offset='0%' stop-color='#fde68a'/>\n      <stop offset='100%' stop-color='#fca5a5'/>\n    </linearGradient>\n  </defs>\n  <rect width='100%' height='100%' fill='url(#g)'/>\n  <text x='50%' y='45%' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='Inter, sans-serif' fill='#111'>AI Pre-Wedding</text>\n  <text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='20' font-family='Inter, sans-serif' fill='#111'>${style.title} • ${i + 1}/10</text>\n</svg>`;
+      const images = Array.from({ length: 1 }, (_, i) => {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='1000'>\n  <defs>\n    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>\n      <stop offset='0%' stop-color='#fde68a'/>\n      <stop offset='100%' stop-color='#fca5a5'/>\n    </linearGradient>\n  </defs>\n  <rect width='100%' height='100%' fill='url(#g)'/>\n  <text x='50%' y='45%' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='Inter, sans-serif' fill='#111'>AI Pre-Wedding</text>\n  <text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='20' font-family='Inter, sans-serif' fill='#111'>${style.title} • ${i + 1}/1</text>\n</svg>`;
         const b64 = Buffer.from(svg).toString('base64');
         return { id: i + 1, dataUrl: `data:image/svg+xml;base64,${b64}` };
       });
       return Response.json({ images });
     }
 
-    // Generate exactly 10 images; run in parallel with modest concurrency.
-    const seeds = Array.from({ length: 10 }, (_, i) => Math.floor(Math.random() * 1e9) + i);
+    // Generate exactly 1 image.
+    const seeds = Array.from({ length: 1 }, (_, i) => Math.floor(Math.random() * 1e9) + i);
 
     const queue = [...seeds];
     const results: { data: string; mime?: string }[] = [];
-    const MAX_CONCURRENCY = 2; // conservative to reduce rate-limit risk
+    const MAX_CONCURRENCY = 1;
 
     async function worker() {
       while (queue.length) {
