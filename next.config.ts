@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
         { key: "Permissions-Policy", value: "geolocation=(), microphone=(), camera=()" },
         // Allow data: images (for DEMO_MODE) and self scripts/styles. Looser in dev to avoid DX issues.
         { key: "Content-Security-Policy", value: isProd
-          ? "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:;"
+          ? "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data:;"
           : "default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' ws:; font-src 'self' data:;" },
       ],
     },
