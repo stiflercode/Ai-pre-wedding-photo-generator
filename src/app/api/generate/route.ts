@@ -18,14 +18,10 @@ async function fileToInlineData(file: File) {
   return { inlineData: { data: b64, mimeType: file.type } } as const;
 }
 
-function getKeys() {
-  const keys = [
-    process.env.GEMINI_API_KEY_1,
-    process.env.GEMINI_API_KEY_2,
-    process.env.GEMINI_API_KEY_3,
-  ].filter(Boolean) as string[];
-  if (keys.length === 0) throw new Error("Missing GEMINI_API_KEY envs");
-  return keys;
+function getApiKey() {
+  const key = process.env.GEMINI_API_KEY_1;
+  if (!key) throw new Error("Missing GEMINI_API_KEY_1 environment variable");
+  return key;
 }
 
 async function generateOne(
@@ -81,35 +77,34 @@ async function generateOne(
   return { data, mime } as const
 }
 
-async function generateWithFailover(
+async function generateImage(
   prompt: string,
   img1: File,
   img2: File,
   seed: number
 ): Promise<{ data: string; mime?: string }> {
-  const keys = getKeys();
+  const apiKey = getApiKey();
   let lastErr: unknown;
-  for (const key of keys) {
-    for (const modelName of MODEL_NAMES) {
-      try {
-        return await generateOne(prompt, img1, img2, seed, key, modelName);
-      } catch (err: unknown) {
-        lastErr = err;
-        const msg = err instanceof Error ? err.message : String(err);
-        // If rate/quota/billing → try next key (break inner)
-        if (/quota|billing|exceed|rate|429|402|403/i.test(msg)) {
-          continue; // try next model before switching key
-        }
-        // If model issue → try next model
-        if (/model|not\s*found|unsupported|invalid/i.test(msg)) {
-          continue; // next modelName
-        }
-        // Non-retryable
-        throw (err instanceof Error ? err : new Error("Gemini generation failed"));
+
+  // Try each model in sequence with the single API key
+  for (const modelName of MODEL_NAMES) {
+    try {
+      return await generateOne(prompt, img1, img2, seed, apiKey, modelName);
+    } catch (err: unknown) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+
+      // If model issue → try next model
+      if (/model|not\s*found|unsupported|invalid/i.test(msg)) {
+        continue;
       }
+
+      // For quota/rate/billing errors or other errors, throw immediately
+      throw (err instanceof Error ? err : new Error("Gemini generation failed"));
     }
   }
-  throw (lastErr instanceof Error ? lastErr : new Error("Gemini generation failed"));
+
+  throw (lastErr instanceof Error ? lastErr : new Error("All models failed"));
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number, label = "operation"): Promise<T> {
@@ -162,7 +157,7 @@ export async function POST(req: NextRequest) {
     async function worker() {
       while (queue.length) {
         const seed = queue.shift()!;
-        const imgB64 = await generateWithFailover(enhancedPrompt, img1 as File, img2 as File, seed);
+        const imgB64 = await generateImage(enhancedPrompt, img1 as File, img2 as File, seed);
         results.push(imgB64);
       }
     }
